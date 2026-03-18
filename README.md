@@ -62,3 +62,4 @@ ap-lit-engine/
 - **Swap model for testing:** Replace `claude-opus-4-6` with `claude-haiku-4-5-20251001` in the route files for faster, cheaper responses during development.
 - **API key is server-side only** — it's never exposed to the browser.
 - The `.gitignore` already excludes `.env.local` so your key won't be accidentally committed.
+# ap-lit-engine
