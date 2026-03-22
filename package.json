@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@next/third-parties": "^16.2.1",
     "next": "15.3.1",
     "pdfkit": "^0.15.1",
     "react": "^19.0.0",
