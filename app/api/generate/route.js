@@ -12,15 +12,20 @@ export async function POST(req) {
       return Response.json({ error: "Title is required" }, { status: 400 });
     }
 
-    const message = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 4096,
-      system: `You are an expert AP Literature teacher and literary analyst. 
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const anthropicStream = await client.messages.stream({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 4096,
+            system: `You are an expert AP Literature teacher and literary analyst.
 You always respond in valid JSON only — no markdown, no explanation, just the raw JSON object.`,
-      messages: [
-        {
-          role: "user",
-          content: `Generate a comprehensive AP Literature study guide for "${title}".
+            messages: [
+              {
+                role: "user",
+                content: `Generate a comprehensive AP Literature study guide for "${title}".
 
 Return a JSON object with exactly this structure:
 {
@@ -38,15 +43,33 @@ Return a JSON object with exactly this structure:
 }
 
 Include at least 4 characters, 4 themes, and 4 quotes.`,
-        },
-      ],
+              },
+            ],
+          });
+
+          for await (const chunk of anthropicStream) {
+            if (
+              chunk.type === "content_block_delta" &&
+              chunk.delta?.type === "text_delta"
+            ) {
+              controller.enqueue(encoder.encode(chunk.delta.text));
+            }
+          }
+
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
     });
 
-    const raw = message.content[0].text;
-    const clean = raw.replace(/```json|```/g, "").trim();
-    const data = JSON.parse(clean);
-
-    return Response.json(data);
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch (error) {
     console.error("Error in /api/generate:", error);
     return Response.json(
