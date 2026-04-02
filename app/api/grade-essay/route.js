@@ -14,30 +14,69 @@ export async function POST(req) {
 
     const message = await client.messages.create({
       model: "claude-opus-4-6",
-      max_tokens: 1024,
-      system: `You are a strict but fair AP Literature essay grader with 20 years of experience.
-You always respond in valid JSON only — no markdown, no explanation, just the raw JSON object.`,
+      max_tokens: 4096,
+      system: `You are an expert AP Literature writing coach, editor, and rhetorician. You analyze student essays with deep expertise across grammar, rhetoric, logic, and textual analysis.
+
+You always respond in valid JSON only — no markdown, no explanation, just the raw JSON object.
+
+You annotate essays across these eight categories:
+
+STYLE PRINCIPLES (from The Elements of Style by Strunk):
+1. OMIT_NEEDLESS_WORDS — Wordy phrases, redundant modifiers, unnecessary padding
+2. CLARITY — Confusing sentence structure, ambiguous pronoun references, unclear meaning
+3. PARAGRAPH_STRUCTURE — Weak topic sentences, poor transitions, illogical paragraph flow
+4. WORD_CHOICE — Vague or weak word choices, overused words, imprecise language
+
+GRAMMAR:
+5. GRAMMAR_ERROR — Subject-verb disagreement, tense inconsistency, misplaced modifiers, comma splices, run-on sentences, sentence fragments, incorrect punctuation
+
+RHETORIC:
+6. RHETORICAL_ERROR — Weak or missing thesis, underdeveloped argument, poor use of ethos/pathos/logos, ineffective transitions, lack of counterargument
+
+LOGIC:
+7. LOGICAL_FALLACY — Ad hominem, straw man, hasty generalization, false dichotomy, circular reasoning, appeal to authority, slippery slope, non sequitur
+
+TEXT ADHERENCE:
+8. TEXT_ADHERENCE — Claims unsupported by the text, misquotation, misinterpretation of source material, lack of textual evidence, plot inaccuracies`,
       messages: [
         {
           role: "user",
-          content: `Grade the following AP Literature essay${title ? ` about "${title}"` : ""}.
+          content: `Analyze this essay${title ? ` about "${title}"` : ""} and return detailed annotations across all eight categories.
 
 Essay:
 """
 ${essay}
 """
 
-Score each category from 1–10 and return a JSON object with exactly this structure:
+Return a JSON object with exactly this structure:
 {
-  "grammar": <number 1-10>,
-  "originality": <number 1-10>,
-  "clarity": <number 1-10>,
-  "fidelity": <number 1-10>,
-  "total": "<sum>/40",
-  "feedback": "2-3 sentences of specific, actionable feedback"
+  "annotations": [
+    {
+      "id": "unique string like ann_1, ann_2...",
+      "startIndex": <exact character index where the issue begins in the original essay>,
+      "endIndex": <exact character index where the issue ends>,
+      "text": "the exact text being annotated",
+      "type": "OMIT_NEEDLESS_WORDS" | "CLARITY" | "PARAGRAPH_STRUCTURE" | "WORD_CHOICE" | "GRAMMAR_ERROR" | "RHETORICAL_ERROR" | "LOGICAL_FALLACY" | "TEXT_ADHERENCE",
+      "severity": "minor" | "moderate" | "major",
+      "note": "Concise, direct note explaining the issue (max 20 words)",
+      "suggestion": "The improved version of the flagged text"
+    }
+  ],
+  "overallScore": <number 1-100>,
+  "summary": "2-3 sentence overall assessment — direct, honest, constructive",
+  "strengths": ["strength 1", "strength 2"],
+  "topIssues": ["most common issue 1", "most common issue 2", "most common issue 3"]
 }
 
-Be rigorous. A score of 10 means truly exceptional AP-level work.`,
+Important rules:
+- Provide 10-24 annotations covering a mix of all relevant categories
+- startIndex and endIndex must be EXACT character positions in the original essay text
+- The "text" field must be the EXACT substring from essay[startIndex:endIndex]
+- Spread annotations across the full essay, not just the beginning
+- For GRAMMAR_ERROR: name the specific error type in the note (e.g. "Comma splice. Join with semicolon or split into two sentences.")
+- For LOGICAL_FALLACY: name the specific fallacy (e.g. "Hasty generalization — one example does not prove a universal claim.")
+- For TEXT_ADHERENCE: be specific about what is unsupported or misread
+- For RHETORICAL_ERROR: explain what rhetorical move is missing or weak`,
         },
       ],
     });
@@ -46,11 +85,17 @@ Be rigorous. A score of 10 means truly exceptional AP-level work.`,
     const clean = raw.replace(/```json|```/g, "").trim();
     const data = JSON.parse(clean);
 
+    // Validate annotations — only keep those with valid character ranges
+    data.annotations = (data.annotations || []).filter((ann) => {
+      const slice = essay.slice(ann.startIndex, ann.endIndex);
+      return slice.length > 0;
+    });
+
     return Response.json(data);
   } catch (error) {
-    console.error("Error in /api/grade-essay:", error);
+    console.error("Error in /api/annotate:", error);
     return Response.json(
-      { error: "Failed to grade essay" },
+      { error: "Failed to annotate essay" },
       { status: 500 }
     );
   }
