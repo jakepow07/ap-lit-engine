@@ -38,6 +38,18 @@ const styles = `
     --ann-word:      #f5d0fe;
     --ann-word-dark: #581c87;
     --ann-word-border: #a855f7;
+    --ann-grammar:        #fee2e2;
+    --ann-grammar-dark:   #7f1d1d;
+    --ann-grammar-border: #ef4444;
+    --ann-rhetoric:        #ffedd5;
+    --ann-rhetoric-dark:   #7c2d12;
+    --ann-rhetoric-border: #f97316;
+    --ann-fallacy:        #e0e7ff;
+    --ann-fallacy-dark:   #1e1b4b;
+    --ann-fallacy-border: #6366f1;
+    --ann-text:        #d1fae5;
+    --ann-text-dark:   #064e3b;
+    --ann-text-border: #10b981;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -130,6 +142,10 @@ const styles = `
   .mark-CLARITY { background: var(--ann-clarity); border-bottom-color: var(--ann-clarity-border); }
   .mark-PARAGRAPH_STRUCTURE { background: var(--ann-para); border-bottom-color: var(--ann-para-border); }
   .mark-WORD_CHOICE { background: var(--ann-word); border-bottom-color: var(--ann-word-border); }
+  .mark-GRAMMAR_ERROR    { background: var(--ann-grammar);  border-bottom-color: var(--ann-grammar-border); }
+  .mark-RHETORICAL_ERROR { background: var(--ann-rhetoric); border-bottom-color: var(--ann-rhetoric-border); }
+  .mark-LOGICAL_FALLACY  { background: var(--ann-fallacy);  border-bottom-color: var(--ann-fallacy-border); }
+  .mark-TEXT_ADHERENCE   { background: var(--ann-text);     border-bottom-color: var(--ann-text-border); }
   .margin-panel { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto; }
   .margin-note { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; cursor: pointer; transition: all 0.15s; border-left: 4px solid transparent; animation: slideIn 0.2s ease both; }
   @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
@@ -139,11 +155,19 @@ const styles = `
   .margin-note.type-CLARITY { border-left-color: var(--ann-clarity-border); }
   .margin-note.type-PARAGRAPH_STRUCTURE { border-left-color: var(--ann-para-border); }
   .margin-note.type-WORD_CHOICE { border-left-color: var(--ann-word-border); }
+  .margin-note.type-GRAMMAR_ERROR    { border-left-color: var(--ann-grammar-border); }
+  .margin-note.type-RHETORICAL_ERROR { border-left-color: var(--ann-rhetoric-border); }
+  .margin-note.type-LOGICAL_FALLACY  { border-left-color: var(--ann-fallacy-border); }
+  .margin-note.type-TEXT_ADHERENCE   { border-left-color: var(--ann-text-border); }
   .note-type-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
   .label-OMIT_NEEDLESS_WORDS { color: var(--ann-omit-dark); }
   .label-CLARITY { color: var(--ann-clarity-dark); }
   .label-PARAGRAPH_STRUCTURE { color: var(--ann-para-dark); }
   .label-WORD_CHOICE { color: var(--ann-word-dark); }
+  .label-GRAMMAR_ERROR    { color: var(--ann-grammar-dark); }
+  .label-RHETORICAL_ERROR { color: var(--ann-rhetoric-dark); }
+  .label-LOGICAL_FALLACY  { color: var(--ann-fallacy-dark); }
+  .label-TEXT_ADHERENCE   { color: var(--ann-text-dark); }
   .note-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 6px; }
   .note-suggestion { font-size: 12px; color: var(--success); font-style: italic; line-height: 1.4; }
   .note-original { font-size: 12px; color: var(--text-muted); text-decoration: line-through; margin-bottom: 2px; }
@@ -154,6 +178,10 @@ const styles = `
   .sw-clarity { background: var(--ann-clarity); border-color: var(--ann-clarity-border); }
   .sw-para { background: var(--ann-para); border-color: var(--ann-para-border); }
   .sw-word { background: var(--ann-word); border-color: var(--ann-word-border); }
+  .sw-grammar  { background: var(--ann-grammar);  border-color: var(--ann-grammar-border); }
+  .sw-rhetoric { background: var(--ann-rhetoric); border-color: var(--ann-rhetoric-border); }
+  .sw-fallacy  { background: var(--ann-fallacy);  border-color: var(--ann-fallacy-border); }
+  .sw-text     { background: var(--ann-text);     border-color: var(--ann-text-border); }
   .score-bar-wrap { margin-bottom: 20px; }
   .score-number { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--navy); }
   .score-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -222,8 +250,11 @@ const ANN_CONFIG = {
   CLARITY:              { label: "Clarity",              short: "Clarity",   swClass: "sw-clarity" },
   PARAGRAPH_STRUCTURE:  { label: "Paragraph structure",  short: "Paragraph", swClass: "sw-para" },
   WORD_CHOICE:          { label: "Word choice",          short: "Word",      swClass: "sw-word" },
+  GRAMMAR_ERROR:        { label: "Grammar error",        short: "Grammar",   swClass: "sw-grammar" },
+  RHETORICAL_ERROR:     { label: "Rhetorical error",     short: "Rhetoric",  swClass: "sw-rhetoric" },
+  LOGICAL_FALLACY:      { label: "Logical fallacy",      short: "Fallacy",   swClass: "sw-fallacy" },
+  TEXT_ADHERENCE:       { label: "Text adherence",       short: "Text",      swClass: "sw-text" },
 };
-
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
