@@ -589,6 +589,26 @@ function EssayGrader({ title }) {
 
 // ─── Trivia ───────────────────────────────────────────────────────────────────
 function TriviaGame() {
+  // ─────────────────────────────────────────────────────────────────────────────
+// DROP-IN REPLACEMENT for the TriviaGame function in page.js
+//
+// HOW TO USE:
+// 1. Open page.js in your editor
+// 2. Find the line:  function TriviaGame() {
+// 3. Delete everything from that line down to (and including) the closing }
+//    that ends the TriviaGame function
+// 4. Paste this entire file's contents in its place
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Spaced repetition intervals (in number of questions)
+const SR_INTERVALS = {
+  WRONG_FIRST:    2,   // Seen once, got it wrong  → repeat after 2 questions
+  WRONG_AGAIN:    1,   // Got it wrong again        → repeat after 1 question (next!)
+  CORRECT_ONCE:   8,   // Got it right first try    → repeat after 8 questions
+  CORRECT_RETRY:  4,   // Got it right after wrong  → repeat after 4 questions
+};
+
+function TriviaGame() {
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -598,41 +618,120 @@ function TriviaGame() {
   const [previousQuestions, setPreviousQuestions] = useState([]);
   const [pointsFlash, setPointsFlash] = useState(null);
 
-  async function fetchQuestion() {
-    setLoading(true); setSelected(null); setPointsFlash(null);
+  // Spaced repetition queue
+  // Each entry: { question: <full question object>, dueAt: <questionsAnswered count when to show> }
+  const [srQueue, setSrQueue] = useState([]);
+
+  // Track which questions were previously wrong (so we know if a retry was needed)
+  const [wrongSet, setWrongSet] = useState(new Set());
+
+  async function fetchQuestion(currentCount) {
+    setLoading(true);
+    setSelected(null);
+    setPointsFlash(null);
+
     try {
-      const res = await fetch("/api/trivia", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ previousQuestions: previousQuestions.slice(-10) }),
-      });
-      const data = await res.json();
+      // Check if any spaced repetition card is due
+      const due = srQueue.find((entry) => entry.dueAt <= currentCount);
+
+      let data;
+      if (due) {
+        // Remove from queue and serve the review question
+        setSrQueue((q) => q.filter((e) => e !== due));
+        const res = await fetch("/api/trivia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repeatQuestion: due.question }),
+        });
+        data = await res.json();
+      } else {
+        // Fetch a fresh question, avoiding recent ones
+        const res = await fetch("/api/trivia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            previousQuestions: previousQuestions.slice(-15),
+          }),
+        });
+        data = await res.json();
+        setPreviousQuestions((prev) => [...prev, data.question]);
+      }
+
       setQuestion(data);
-      setPreviousQuestions((prev) => [...prev, data.question]);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
+
     setLoading(false);
   }
 
-  useEffect(() => { fetchQuestion(); }, []);
+  useEffect(() => { fetchQuestion(0); }, []);
 
   function handleAnswer(option) {
-    if (selected) return;
+    if (selected || !question) return;
+
     setSelected(option);
-    setQuestionsAnswered((q) => q + 1);
+    const newCount = questionsAnswered + 1;
+    setQuestionsAnswered(newCount);
+
     const correct = option === question.answer;
+    const wasWrong = wrongSet.has(question.question);
+
     if (correct) {
+      // Award points
       const streakBonus = streak >= 2 ? Math.floor(question.points * 0.5) : 0;
       const earned = question.points + streakBonus;
       setScore((s) => s + earned);
       setStreak((s) => s + 1);
       setPointsFlash({ earned, bonus: streakBonus > 0 });
-    } else { setStreak(0); }
+
+      // Schedule a future review (correct answers still get reviewed, just later)
+      const interval = wasWrong ? SR_INTERVALS.CORRECT_RETRY : SR_INTERVALS.CORRECT_ONCE;
+      setSrQueue((q) => [
+        ...q,
+        { question, dueAt: newCount + interval },
+      ]);
+
+      // Remove from wrong set if they got it right
+      if (wasWrong) {
+        setWrongSet((prev) => {
+          const next = new Set(prev);
+          next.delete(question.question);
+          return next;
+        });
+      }
+    } else {
+      // Wrong answer
+      setStreak(0);
+
+      // Schedule a sooner review
+      const interval = wasWrong ? SR_INTERVALS.WRONG_AGAIN : SR_INTERVALS.WRONG_FIRST;
+      setSrQueue((q) => [
+        ...q.filter((e) => e.question.question !== question.question), // remove old entry if exists
+        { question, dueAt: newCount + interval },
+      ]);
+
+      // Mark as wrong
+      setWrongSet((prev) => new Set(prev).add(question.question));
+    }
   }
 
-  const diffClass = { easy: "diff-easy", medium: "diff-medium", hard: "diff-hard", fiendish: "diff-fiendish" };
+  function handleNext() {
+    fetchQuestion(questionsAnswered);
+  }
+
+  const diffClass = {
+    easy: "diff-easy",
+    medium: "diff-medium",
+    hard: "diff-hard",
+    fiendish: "diff-fiendish",
+  };
+
+  const reviewDue = srQueue.filter((e) => e.dueAt <= questionsAnswered).length;
 
   return (
     <div>
+      {/* Scoreboard */}
       <div className="trivia-scoreboard">
         <div className="score-block">
           <div className="score-block-label">Score</div>
@@ -640,77 +739,184 @@ function TriviaGame() {
           <div className="score-block-sub">points</div>
         </div>
         <div className="score-block">
-          <div className="score-block-label">Streak {streak >= 3 && <span className="streak-fire">🔥</span>}</div>
+          <div className="score-block-label">
+            Streak {streak >= 3 && <span className="streak-fire">🔥</span>}
+          </div>
           <div className="score-block-value white">{streak}</div>
-          <div className="score-block-sub">{streak >= 2 ? "+50% bonus active!" : "build a streak for bonuses"}</div>
+          <div className="score-block-sub">
+            {streak >= 2 ? "+50% bonus active!" : "build a streak for bonuses"}
+          </div>
         </div>
         <div className="score-block">
           <div className="score-block-label">Answered</div>
           <div className="score-block-value">{questionsAnswered}</div>
-          <div className="score-block-sub">questions</div>
+          <div className="score-block-sub">
+            {reviewDue > 0
+              ? `${reviewDue} review${reviewDue > 1 ? "s" : ""} queued`
+              : srQueue.length > 0
+              ? `${srQueue.length} in review queue`
+              : "questions"}
+          </div>
         </div>
       </div>
+
       <div className="card">
         {loading ? (
           <div className="trivia-loading">
             <div className="trivia-spinner" />
-            <div className="trivia-loading-text">Consulting the literary canon…</div>
+            <div className="trivia-loading-text">
+              {reviewDue > 0
+                ? "Retrieving a question for review…"
+                : "Consulting the literary canon…"}
+            </div>
           </div>
         ) : question ? (
           <>
+            {/* Question metadata */}
             <div className="trivia-question-meta">
-              <span className={`diff-badge ${diffClass[question.difficulty] ?? "diff-medium"}`}>{question.difficulty}</span>
+              <span className={`diff-badge ${diffClass[question.difficulty] ?? "diff-medium"}`}>
+                {question.difficulty}
+              </span>
               <span className="cat-pill">{question.category}</span>
+
+              {/* Review badge */}
+              {question.isReview && (
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  background: wrongSet.has(question.question) ? "#fee2e2" : "#dbeafe",
+                  color: wrongSet.has(question.question) ? "#991b1b" : "#1e40af",
+                  padding: "3px 10px",
+                  borderRadius: 20,
+                }}>
+                  {wrongSet.has(question.question) ? "⟳ Review — you missed this" : "⟳ Spaced review"}
+                </span>
+              )}
+
               <span style={{ marginLeft: "auto" }}>
                 <span className="points-tag">
-                  {pointsFlash && selected === question.answer
-                    ? <span className="points-flash">+{pointsFlash.earned}{pointsFlash.bonus ? " 🔥" : ""}</span>
-                    : `${question.points} pts`}
+                  {pointsFlash && selected === question.answer ? (
+                    <span className="points-flash">
+                      +{pointsFlash.earned}{pointsFlash.bonus ? " 🔥" : ""}
+                    </span>
+                  ) : (
+                    `${question.points} pts`
+                  )}
                 </span>
               </span>
             </div>
+
             <div className="trivia-question-text">{question.question}</div>
+
+            {/* Answer options */}
             <div className="options-grid">
               {question.options?.map((opt, i) => {
                 let cls = "option-btn";
-                if (selected) { if (opt === question.answer) cls += " correct"; else if (opt === selected) cls += " wrong"; }
+                if (selected) {
+                  if (opt === question.answer) cls += " correct";
+                  else if (opt === selected) cls += " wrong";
+                }
                 return (
-                  <button key={i} className={cls} onClick={() => handleAnswer(opt)} disabled={!!selected}>
-                    <span style={{ opacity: 0.4, marginRight: 8, fontSize: 13 }}>{String.fromCharCode(65 + i)}.</span>{opt}
+                  <button
+                    key={i}
+                    className={cls}
+                    onClick={() => handleAnswer(opt)}
+                    disabled={!!selected}
+                  >
+                    <span style={{ opacity: 0.4, marginRight: 8, fontSize: 13 }}>
+                      {String.fromCharCode(65 + i)}.
+                    </span>
+                    {opt}
                   </button>
                 );
               })}
             </div>
+
+            {/* Feedback */}
             {selected && (
               <>
                 <div className={`trivia-feedback ${selected === question.answer ? "correct-fb" : "wrong-fb"}`}>
                   <div className={`fb-title ${selected === question.answer ? "correct-fb" : "wrong-fb"}`}>
-                    {selected === question.answer ? (streak >= 2 ? `🔥 Correct! ${streak} in a row!` : "✓ Correct!") : `✗ Not quite — the answer was "${question.answer}"`}
+                    {selected === question.answer
+                      ? streak >= 2
+                        ? `🔥 Correct! ${streak} in a row!`
+                        : question.isReview
+                        ? "✓ Correct — you've got it now!"
+                        : "✓ Correct!"
+                      : `✗ Not quite — the answer was "${question.answer}"`}
                   </div>
-                  {question.funFact && <div className="fb-fact"><strong>Did you know?</strong> {question.funFact}</div>}
+
+                  {/* Spaced repetition notice */}
+                  {selected !== question.answer && (
+                    <div style={{
+                      fontSize: 13,
+                      marginTop: 8,
+                      color: "#b91c1c",
+                      fontWeight: 600,
+                    }}>
+                      {wrongSet.has(question.question)
+                        ? "You'll see this again next question — keep at it!"
+                        : "You'll see this again in 2 questions to help it stick."}
+                    </div>
+                  )}
+
+                  {selected === question.answer && question.isReview && (
+                    <div style={{ fontSize: 13, marginTop: 8, color: "#1a7a4a", fontWeight: 600 }}>
+                      Great recall! This question has been retired from your review queue.
+                    </div>
+                  )}
+
+                  {question.funFact && (
+                    <div className="fb-fact">
+                      <strong>Did you know?</strong> {question.funFact}
+                    </div>
+                  )}
                 </div>
+
                 <div className="trivia-actions">
                   <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                    {selected === question.answer ? `+${pointsFlash?.earned ?? question.points} points earned` : "No points this round — keep going!"}
+                    {selected === question.answer
+                      ? `+${pointsFlash?.earned ?? question.points} points earned`
+                      : "No points this round — keep going!"}
+                    {srQueue.length > 0 && (
+                      <span style={{ marginLeft: 10, color: "var(--accent)", fontWeight: 600 }}>
+                        {srQueue.length} question{srQueue.length > 1 ? "s" : ""} in review queue
+                      </span>
+                    )}
                   </span>
-                  <button className="btn-accent" onClick={fetchQuestion}>Next Question →</button>
+                  <button className="btn-accent" onClick={handleNext}>
+                    Next Question →
+                  </button>
                 </div>
               </>
             )}
+
             {!selected && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button className="btn-secondary" style={{ fontSize: 13 }} onClick={fetchQuestion}>Skip</button>
+                <button
+                  className="btn-secondary"
+                  style={{ fontSize: 13 }}
+                  onClick={handleNext}
+                >
+                  Skip
+                </button>
               </div>
             )}
           </>
         ) : (
           <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
-            Failed to load. <button className="btn-accent" onClick={fetchQuestion}>Try again</button>
+            Failed to load.{" "}
+            <button className="btn-accent" onClick={() => fetchQuestion(questionsAnswered)}>
+              Try again
+            </button>
           </div>
         )}
       </div>
     </div>
   );
+}
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
