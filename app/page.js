@@ -819,7 +819,7 @@ function TriviaGame() {
     }
 
     setLoading(false);
-  
+    }
 
   useEffect(() => { fetchQuestion(0); }, []);
 
