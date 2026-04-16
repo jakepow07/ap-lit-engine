@@ -242,6 +242,193 @@ const styles = `
   .footer-inner { max-width: 1000px; margin: 0 auto; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
   .footer-copy { font-size: 13px; color: rgba(255,255,255,0.4); }
   .footer-mark { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+
+  // ─────────────────────────────────────────────────────────────────────────────
+// MOBILE PATCH FOR page.js
+//
+// HOW TO APPLY:
+// 1. Open page.js in your code editor
+// 2. Find the closing backtick of the styles string — it looks like this:
+//
+//       .footer-mark { ... }
+//     `;
+//
+// 3. Paste ALL of the CSS below (the part inside the /* */ block)
+//    JUST BEFORE the closing backtick `;
+//
+// That's it — one paste, no other changes needed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/*
+
+  /* ── VIEWPORT META — also add this to app/layout.js <head> ── */
+  /* In layout.js, update the file to add viewport meta like this:
+
+  export const viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  };
+
+  */
+
+  /* ── MOBILE RESPONSIVE STYLES ── */
+
+  @media (max-width: 640px) {
+
+    /* Header */
+    .header-inner {
+      padding: 0 16px;
+      height: 60px;
+    }
+    .header-title { font-size: 18px; }
+    .header-subtitle { display: none; }
+    .header-badge { display: none; }
+
+    /* Nav tabs — scrollable row on mobile */
+    .nav-tabs-inner {
+      padding: 0 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .nav-tabs-inner::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      padding: 10px 14px;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Main padding */
+    .main { padding: 24px 16px; }
+
+    /* Cards */
+    .card { padding: 20px 16px; }
+    .card-title { font-size: 17px; }
+
+    /* Input row — stack vertically on mobile */
+    .input-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .input-row .btn-primary,
+    .input-row .btn-secondary {
+      width: 100%;
+      text-align: center;
+      padding: 13px 16px;
+    }
+
+    /* Buttons — bigger tap targets */
+    .btn-primary,
+    .btn-secondary,
+    .btn-accent {
+      padding: 13px 20px;
+      font-size: 15px;
+      min-height: 48px;
+    }
+
+    /* Input fields — prevent iOS zoom on focus (font-size must be 16px+) */
+    .input-field,
+    .textarea-field {
+      font-size: 16px;
+      padding: 13px 14px;
+    }
+
+    /* Result cards */
+    .result-header { padding: 12px 16px; }
+    .result-body { padding: 16px; }
+    .quote-block { padding: 14px 16px; }
+    .trivia-question-text { font-size: 18px; }
+
+    /* Trivia options — stack to single column on small phones */
+    .options-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .option-btn {
+      padding: 14px 16px;
+      font-size: 15px;
+      min-height: 52px;
+    }
+
+    /* Trivia scoreboard — reduce font sizes */
+    .trivia-scoreboard { padding: 16px 12px; }
+    .score-block-value { font-size: 24px; }
+    .score-block-sub { font-size: 10px; }
+    .score-block-label { font-size: 9px; }
+
+    /* Trivia actions — stack on mobile */
+    .trivia-actions {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .trivia-actions .btn-accent {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Annotation layout — stack vertically on mobile */
+    .annotator-layout {
+      grid-template-columns: 1fr;
+    }
+    .margin-panel {
+      position: static;
+      max-height: none;
+      overflow-y: visible;
+    }
+    .essay-display {
+      padding: 20px 16px;
+      font-size: 15px;
+    }
+
+    /* Essay grader score grid — stack to 2 col */
+    .grade-score-grid {
+      grid-template-columns: 1fr !important;
+      gap: 16px !important;
+    }
+
+    /* Ann legend — wrap tighter */
+    .ann-legend { gap: 10px; }
+    .legend-item { font-size: 11px; }
+
+    /* Filter buttons — scrollable row */
+    .filter-row {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-btn { flex-shrink: 0; }
+
+    /* Footer */
+    .footer-inner {
+      padding: 16px;
+      flex-direction: column;
+      gap: 4px;
+      text-align: center;
+    }
+
+    /* Score summary grid in essay grader */
+    .score-summary-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* Medium screens (tablets) */
+  @media (max-width: 768px) {
+    .header-inner { padding: 0 24px; }
+    .main { padding: 32px 24px; }
+    .nav-tabs-inner { padding: 0 16px; }
+    .annotator-layout { grid-template-columns: 1fr; }
+    .margin-panel { position: static; max-height: none; }
+  }
+
+*/
 `;
 
 // ─── Annotation helpers ───────────────────────────────────────────────────────
