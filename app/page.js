@@ -52,7 +52,7 @@ const styles = `
     --ann-text-border: #10b981;
   }
 
-   { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
   .app-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -1073,7 +1073,7 @@ function TriviaGame() {
     </div>
   );
 }
-}
+
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Home() {
