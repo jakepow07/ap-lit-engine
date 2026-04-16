@@ -52,7 +52,7 @@ const styles = `
     --ann-text-border: #10b981;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+   { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
   .app-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -244,36 +244,9 @@ const styles = `
   .footer-mark { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 
 
-  // ─────────────────────────────────────────────────────────────────────────────
-// MOBILE PATCH FOR page.js
-//
-// HOW TO APPLY:
-// 1. Open page.js in your code editor
-// 2. Find the closing backtick of the styles string — it looks like this:
-//
-//       .footer-mark { ... }
-//     `;
-//
-// 3. Paste ALL of the CSS below (the part inside the /* */ block)
-//    JUST BEFORE the closing backtick `;
-//
-// That's it — one paste, no other changes needed.
-// ─────────────────────────────────────────────────────────────────────────────
+ 
 
-/*
-
-  /* ── VIEWPORT META — also add this to app/layout.js <head> ── */
-  /* In layout.js, update the file to add viewport meta like this:
-
-  export const viewport = {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  };
-
-  */
-
-  /* ── MOBILE RESPONSIVE STYLES ── */
+ 
 
   @media (max-width: 640px) {
 
@@ -342,7 +315,7 @@ const styles = `
     .quote-block { padding: 14px 16px; }
     .trivia-question-text { font-size: 18px; }
 
-    /* Trivia options — stack to single column on small phones */
+
     .options-grid {
       grid-template-columns: 1fr;
       gap: 10px;
@@ -353,13 +326,13 @@ const styles = `
       min-height: 52px;
     }
 
-    /* Trivia scoreboard — reduce font sizes */
+   
     .trivia-scoreboard { padding: 16px 12px; }
     .score-block-value { font-size: 24px; }
     .score-block-sub { font-size: 10px; }
     .score-block-label { font-size: 9px; }
 
-    /* Trivia actions — stack on mobile */
+   
     .trivia-actions {
       flex-direction: column;
       gap: 12px;
@@ -370,7 +343,7 @@ const styles = `
       text-align: center;
     }
 
-    /* Annotation layout — stack vertically on mobile */
+   
     .annotator-layout {
       grid-template-columns: 1fr;
     }
@@ -384,17 +357,17 @@ const styles = `
       font-size: 15px;
     }
 
-    /* Essay grader score grid — stack to 2 col */
+    
     .grade-score-grid {
       grid-template-columns: 1fr !important;
       gap: 16px !important;
     }
 
-    /* Ann legend — wrap tighter */
+    
     .ann-legend { gap: 10px; }
     .legend-item { font-size: 11px; }
 
-    /* Filter buttons — scrollable row */
+    
     .filter-row {
       flex-wrap: nowrap;
       overflow-x: auto;
@@ -405,7 +378,6 @@ const styles = `
     .filter-row::-webkit-scrollbar { display: none; }
     .filter-btn { flex-shrink: 0; }
 
-    /* Footer */
     .footer-inner {
       padding: 16px;
       flex-direction: column;
@@ -413,13 +385,13 @@ const styles = `
       text-align: center;
     }
 
-    /* Score summary grid in essay grader */
+   
     .score-summary-grid {
       grid-template-columns: 1fr !important;
     }
   }
 
-  /* Medium screens (tablets) */
+
   @media (max-width: 768px) {
     .header-inner { padding: 0 24px; }
     .main { padding: 32px 24px; }
@@ -427,8 +399,6 @@ const styles = `
     .annotator-layout { grid-template-columns: 1fr; }
     .margin-panel { position: static; max-height: none; }
   }
-
-*/
 `;
 
 // ─── Annotation helpers ───────────────────────────────────────────────────────
