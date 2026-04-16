@@ -745,7 +745,6 @@ function EssayGrader({ title }) {
 }
 
 // ─── Trivia ───────────────────────────────────────────────────────────────────
-function TriviaGame() {
   // ─────────────────────────────────────────────────────────────────────────────
 // DROP-IN REPLACEMENT for the TriviaGame function in page.js
 //
@@ -820,7 +819,7 @@ function TriviaGame() {
     }
 
     setLoading(false);
-  }
+  
 
   useEffect(() => { fetchQuestion(0); }, []);
 
